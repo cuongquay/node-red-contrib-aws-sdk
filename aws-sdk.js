@@ -141,13 +141,15 @@ module.exports = function(RED) {
 		}
 		var context = vm.createContext(sandbox);
 		try {
-			this.on("input", function(msg) {
-				node.script = vm.createScript(functionText);
+			this.script = vm.createScript(functionText);
+			this.on("input", function(msg) {				
 				try {
 					var start = process.hrtime();
-					context.msg = msg;					
+					context.msg = msg;
+					context.AWS = AWS;		
 					node.script.runInContext(context);
 					sendResults(node, node.name, context.results);
+					
 					var duration = process.hrtime(start);
 					var converted = Math.floor((duration[0] * 1e9 + duration[1]) / 10000) / 100;
 					node.metric("duration", node.name, converted);
