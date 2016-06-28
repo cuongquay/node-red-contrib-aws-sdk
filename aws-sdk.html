@@ -133,8 +133,16 @@ limitations under the License.
 	<div class="form-tips"><span>See the Info tab for help writing functions.</span></div>
 </script>
 
-<script type="text/x-red" data-help-name="queue run">
-	<p>A function block where you can write code to execute aws sdk.</p>	
+<script type="text/x-red" data-help-name="aws sdk">
+	<p>A function block where you can write your own code to execute aws-sdk nodejs library.</p>
+	<p>Example of using aws-sdk inside this function block:</p>
+	<p><code>
+		var s3 = new AWS.S3();<br/>
+		&nbsp;&nbsp;s3.createBucket({Bucket: 'myBucket'}, function() {<br/>
+		&nbsp;&nbsp;var params = {Bucket: 'myBucket', Key: 'myKey', Body: 'Hello!'};<br/>
+		&nbsp;&nbsp;s3.putObject(params, function(err, data) {});<br/>
+		});	
+	</code></p>
 </script>
 
 <script type="text/javascript">
