@@ -18,7 +18,7 @@ module.exports = function(RED) {
 	"use strict";
 	var q = require('q');
 	var util = require("util");
-	var vm = require("vm");	
+	var vm = require("vm");
 	var AWS = require('aws-sdk');
 
 	function AWSConfigSetup(n) {
@@ -31,6 +31,8 @@ module.exports = function(RED) {
 		this.name = n.name;
 		this.accesskey = n.accesskey;
 		this.secretkey = n.secretkey;
+		this.region = n.region;
+		this.iamrole = n.iamrole;
 
 		var node = this;
 		this.register = function() {
@@ -41,7 +43,16 @@ module.exports = function(RED) {
 			node.usecount -= 1;
 			if (node.usecount == 0) {
 			}
-		};		
+		};
+		this.init = function() {
+			if (!node.iamrole) {
+				AWS.config.update({
+					accessKeyId : node.accesskey,
+					secretAccessKey : node.secretkey,
+					region : node.region
+				});
+			}
+		};
 
 		this.on('close', function(closecomplete) {
 			if (this.connected) {
@@ -85,79 +96,15 @@ module.exports = function(RED) {
 		}
 	};
 
-	function QueueCmdNode(n) {
-		RED.nodes.createNode(this, n);
-		var node = this;
-		this.name = n.name;
-		this.config = n.config;
-		this.cmd = n.cmd;
-		this.AWSConfig = RED.nodes.getNode(this.config);
-		this.topic = n.topic;
-		if (node.Queue) {
-			node.Queue.register();
-			node.Queue.connect().then(function(queue) {
-				node.status({
-					fill : "green",
-					shape : "ring",
-					text : "connected"
-				});
-			}, function(error) {
-				node.status({
-					fill : "red",
-					shape : "ring",
-					text : "disconnected"
-				});
-			});
-		} else {
-			node.error(RED._("common.status.error"));
-		}
-		try {
-			this.on("input", function(msg) {
-				node.Queue.connect().then(function(queue) {
-					switch (parseInt(node.cmd)) {
-					case 0:
-						node.log(RED._("queue.add()", node.cmd));
-						queue.add(msg, {
-							name : node.name,
-							topic : node.topic
-						});
-						break;
-					case 1:
-						node.log(RED._("queue.pause()", node.cmd));
-						queue.pause();
-						break;
-					case 2:
-						node.log(RED._("queue.resume()", node.cmd));
-						queue.resume();
-						break;
-					default:
-						node.log(RED._("queue.default()", node.cmd));
-						break;
-					}
-				}, function(error) {
-					node.status({
-						fill : "red",
-						shape : "ring",
-						text : "disconnected"
-					});
-				});
-			});
-		} catch(err) {
-			// eg SyntaxError - which v8 doesn't include line number information
-			// so we can't do better than this
-			this.error(err);
-		}
-	}
-
-	function QueueRunNode(n) {
+	function AWSFuncNode(n) {
 		RED.nodes.createNode(this, n);
 		var node = this;
 		this.name = n.name;
 		this.func = n.func;
-		this.queue = n.queue;
+		this.config = n.config;
 		this.topic = n.topic;
 		this.timeout = n.timeout;
-		this.Queue = RED.nodes.getNode(this.queue);
+		this.AWSConfig = RED.nodes.getNode(this.config);
 		var functionText = "var results = null;" + "results = (function(msg){ " + "var __msgid__ = msg._msgid;" + "var node = {" + "log:__node__.log," + "error:__node__.error," + "warn:__node__.warn," + "on:__node__.on," + "status:__node__.status," + "send:function(msgs){ __node__.send(__msgid__,msgs);}" + "};\n" + this.func + "\n" + "})(msg);";
 		var sandbox = {
 			console : console,
@@ -188,76 +135,60 @@ module.exports = function(RED) {
 			},
 			setTimeout : setTimeout,
 			clearTimeout : clearTimeout
-		};
+		};		
+		if (node.AWSConfig) {
+			node.AWSConfig.init();					
+		}
 		var context = vm.createContext(sandbox);
-		if (node.Queue) {
-			node.Queue.register();
-			node.script = vm.createScript(functionText);
-			node.Queue.connect().then(function(queue) {
-				queue.process(function(job, done) {
-					node.log(RED._("queue.run()", job));
-					try {
-						var start = process.hrtime();
-						context.msg = job.data;
-						context.job = job;
-						context.done = done;
-						context.request = request;
-						context.child_process = child_process;
-						node.script.runInContext(context);
-						sendResults(node, node.name, context.results);
-						var duration = process.hrtime(start);
-						var converted = Math.floor((duration[0] * 1e9 + duration[1]) / 10000) / 100;
-						node.metric("duration", node.name, converted);
-						if (process.env.NODE_RED_FUNCTION_TIME) {
-							node.status({
-								fill : "yellow",
-								shape : "dot",
-								text : "" + converted
-							});
-						}
-					} catch(err) {
-						var line = 0;
-						var errorMessage;
-						var stack = err.stack.split(/\r?\n/);
-						if (stack.length > 0) {
-							while (line < stack.length && stack[line].indexOf("ReferenceError") !== 0) {
-								line++;
-							}
-							if (line < stack.length) {
-								errorMessage = stack[line];
-								var m = /:(\d+):(\d+)$/.exec(stack[line + 1]);
-								if (m) {
-									var lineno = Number(m[1]) - 1;
-									var cha = m[2];
-									errorMessage += " (line " + lineno + ", col " + cha + ")";
-								}
-							}
-						}
-						if (!errorMessage) {
-							errorMessage = err.toString();
-						}
-						node.error(errorMessage, node.name);
+		try {
+			this.on("input", function(msg) {
+				node.script = vm.createScript(functionText);
+				try {
+					var start = process.hrtime();
+					context.msg = msg;					
+					node.script.runInContext(context);
+					sendResults(node, node.name, context.results);
+					var duration = process.hrtime(start);
+					var converted = Math.floor((duration[0] * 1e9 + duration[1]) / 10000) / 100;
+					node.metric("duration", node.name, converted);
+					if (process.env.NODE_RED_FUNCTION_TIME) {
+						node.status({
+							fill : "yellow",
+							shape : "dot",
+							text : "" + converted
+						});
 					}
-				});
-				node.status({
-					fill : "green",
-					shape : "ring",
-					text : "connected"
-				});
-			}, function(error) {
-				node.status({
-					fill : "red",
-					shape : "ring",
-					text : "disconnected"
-				});
+				} catch(err) {
+					var line = 0;
+					var errorMessage;
+					var stack = err.stack.split(/\r?\n/);
+					if (stack.length > 0) {
+						while (line < stack.length && stack[line].indexOf("ReferenceError") !== 0) {
+							line++;
+						}
+						if (line < stack.length) {
+							errorMessage = stack[line];
+							var m = /:(\d+):(\d+)$/.exec(stack[line + 1]);
+							if (m) {
+								var lineno = Number(m[1]) - 1;
+								var cha = m[2];
+								errorMessage += " (line " + lineno + ", col " + cha + ")";
+							}
+						}
+					}
+					if (!errorMessage) {
+						errorMessage = err.toString();
+					}
+					node.error(errorMessage, node.name);
+				}
 			});
-		} else {
-			node.error(RED._("common.status.error"));
+		} catch(err) {
+			// eg SyntaxError - which v8 doesn't include line number information
+			// so we can't do better than this
+			this.error(err);
 		}
 	}
 
-
-	RED.nodes.registerType("queue cmd", QueueCmdNode);
-	RED.nodes.registerType("queue run", QueueRunNode);
+	RED.nodes.registerType("aws sdk", AWSFuncNode);
 	RED.library.register("functions");
 };
