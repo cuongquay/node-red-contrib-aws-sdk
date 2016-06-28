@@ -51,7 +51,6 @@ module.exports = function(RED) {
 					secretAccessKey : node.secretkey
 				});
 			}
-			console.log("AWS.config.update", node.region);
 			AWS.config.update({
 				region : node.region
 			});
@@ -110,6 +109,9 @@ module.exports = function(RED) {
 		this.AWSConfig = RED.nodes.getNode(this.config);
 		var functionText = "var results = null;" + "results = (function(msg){ " + "var __msgid__ = msg._msgid;" + "var node = {" + "log:__node__.log," + "error:__node__.error," + "warn:__node__.warn," + "on:__node__.on," + "status:__node__.status," + "send:function(msgs){ __node__.send(__msgid__,msgs);}" + "};\n" + this.func + "\n" + "})(msg);";
 		var sandbox = {
+			callback : function(results) {
+				sendResults(node, node.name, results);
+			},
 			console : console,
 			util : util,
 			Buffer : Buffer,
