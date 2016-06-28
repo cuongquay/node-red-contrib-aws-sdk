@@ -16,14 +16,14 @@ s3bucket.createBucket(function() {
     if (err) {
       console.log("Error uploading data: ", err);
       msg.payload = err;
+      callback(msg);
     } else {
       console.log("Successfully uploaded data to myBucket/myKey");
       msg.payload = data;
+      callback(msg);
     }
   });
 });
-
-return msg;
 ```
 
 Reference: http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-examples.html
