@@ -140,7 +140,10 @@ limitations under the License.
 		var s3 = new AWS.S3();<br/>
 		&nbsp;&nbsp;s3.createBucket({Bucket: 'myBucket'}, function() {<br/>
 		&nbsp;&nbsp;var params = {Bucket: 'myBucket', Key: 'myKey', Body: 'Hello!'};<br/>
-		&nbsp;&nbsp;s3.putObject(params, function(err, data) {});<br/>
+		&nbsp;&nbsp;s3.putObject(params, function(err, data) {
+		&nbsp;&nbsp;&nbsp;&nbsp;msg.payload = data;
+		&nbsp;&nbsp;&nbsp;&nbsp;callback(msg);	
+		&nbsp;&nbsp;});<br/>
 		});	
 	</code></p>
 </script>
