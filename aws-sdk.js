@@ -15,8 +15,7 @@
  **/
 
 module.exports = function(RED) {
-	"use strict";
-	var q = require('q');
+	"use strict";	
 	var util = require("util");
 	var vm = require("vm");
 	var AWS = require('aws-sdk');
