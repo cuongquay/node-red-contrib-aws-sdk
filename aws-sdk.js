@@ -112,6 +112,7 @@ module.exports = function(RED) {
 			callback : function(results) {
 				sendResults(node, node.name, results);
 			},
+			AWS : AWS,
 			console : console,
 			util : util,
 			Buffer : Buffer,
@@ -150,8 +151,7 @@ module.exports = function(RED) {
 			this.on("input", function(msg) {
 				try {
 					var start = process.hrtime();
-					context.msg = msg;
-					context.AWS = AWS;
+					context.msg = msg;					
 					node.script.runInContext(context);
 					sendResults(node, node.name, context.results);
 
