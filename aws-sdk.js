@@ -48,10 +48,12 @@ module.exports = function(RED) {
 			if (!node.iamrole) {
 				AWS.config.update({
 					accessKeyId : node.accesskey,
-					secretAccessKey : node.secretkey,
-					region : node.region
+					secretAccessKey : node.secretkey
 				});
 			}
+			AWS.config.update({
+				region : node.region
+			});
 		};
 
 		this.on('close', function(closecomplete) {
@@ -135,21 +137,21 @@ module.exports = function(RED) {
 			},
 			setTimeout : setTimeout,
 			clearTimeout : clearTimeout
-		};		
+		};
 		if (node.AWSConfig) {
-			node.AWSConfig.init();					
+			node.AWSConfig.init();
 		}
 		var context = vm.createContext(sandbox);
 		try {
 			this.script = vm.createScript(functionText);
-			this.on("input", function(msg) {				
+			this.on("input", function(msg) {
 				try {
 					var start = process.hrtime();
 					context.msg = msg;
-					context.AWS = AWS;		
+					context.AWS = AWS;
 					node.script.runInContext(context);
 					sendResults(node, node.name, context.results);
-					
+
 					var duration = process.hrtime(start);
 					var converted = Math.floor((duration[0] * 1e9 + duration[1]) / 10000) / 100;
 					node.metric("duration", node.name, converted);
@@ -190,6 +192,7 @@ module.exports = function(RED) {
 			this.error(err);
 		}
 	}
+
 
 	RED.nodes.registerType("aws sdk", AWSFuncNode);
 	RED.library.register("functions");
