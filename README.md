@@ -26,4 +26,6 @@ s3bucket.createBucket(function() {
 });
 ```
 
+This node exposes the **AWS** object that is created by require('aws-sdk') into the function context. In order to process the asynchronous operation, a callback(msg) function must call to send the **msg** context to the next node.  
+
 Reference: http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-examples.html
