@@ -1,7 +1,7 @@
 {
 	"name": "node-red-contrib-aws-sdk",
 	"version": "0.1.1",
-	"description": "The aws sdk wrapper which allows you execute aws function in javascript.",
+	"description": "The aws sdk wrapper node which allows you execute aws function in javascript.",
 	"dependencies": {		
 		"is-utf8": ">=0.2.1",
 		"aws-sdk" : ">=2.4.2",
