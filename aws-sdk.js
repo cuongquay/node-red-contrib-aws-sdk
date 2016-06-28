@@ -51,6 +51,7 @@ module.exports = function(RED) {
 					secretAccessKey : node.secretkey
 				});
 			}
+			console.log("AWS.config.update", node.region);
 			AWS.config.update({
 				region : node.region
 			});
