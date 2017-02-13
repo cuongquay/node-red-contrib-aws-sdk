@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<script type="text/x-red" data-template-name="aws-config">
+<script type="text/x-red" data-template-name="aws-sdk-config">
 	<div class="form-row">
 		<ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-config-aws-config-tabs"></ul>
 	</div>
@@ -64,7 +64,7 @@ limitations under the License.
 </script>
 
 <script type="text/javascript">
-	RED.nodes.registerType('aws-config', {
+	RED.nodes.registerType('aws-sdk-config', {
 		category : 'config',
 		defaults : {
 			name : {
@@ -170,7 +170,7 @@ limitations under the License.
 				}
 			},
 			config : {
-				type : "aws-config",
+				type : "aws-sdk-config",
 				required : true
 			}
 		},
