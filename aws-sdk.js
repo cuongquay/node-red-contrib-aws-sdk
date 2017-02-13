@@ -70,7 +70,7 @@ module.exports = function(RED) {
 	}
 
 
-	RED.nodes.registerType("aws-config", AWSConfigSetup);
+	RED.nodes.registerType("aws-sdk-config", AWSConfigSetup);
 
 	function sendResults(node, _msgid, msgs) {
 		if (msgs == null) {
