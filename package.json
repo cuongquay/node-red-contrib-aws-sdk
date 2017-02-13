@@ -1,12 +1,16 @@
 {
 	"name": "node-red-contrib-aws-sdk",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "The aws sdk wrapper node which allows you to execute aws functions in javascript block.",
 	"dependencies": {
 		"aws-sdk": ">=2.4.2"
 	},
 	"license": "Apache-2.0",
-	"keywords": ["node-red", "aws", "sdk"],
+	"keywords": [
+		"node-red",
+		"aws",
+		"sdk"
+	],
 	"node-red": {
 		"nodes": {
 			"aws-sdk": "aws-sdk.js"
