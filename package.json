@@ -2,8 +2,8 @@
 	"name": "node-red-contrib-aws-sdk",
 	"version": "0.1.4",
 	"description": "The aws sdk wrapper node which allows you to execute aws functions in javascript block.",
-	"dependencies": {		
-		"aws-sdk" : ">=2.4.2"
+	"dependencies": {
+		"aws-sdk": ">=2.4.2"
 	},
 	"license": "Apache-2.0",
 	"keywords": ["node-red", "aws", "sdk"],
@@ -15,6 +15,10 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/cuongquay/node-red-contrib-aws-sdk"
+	},
+	"scripts": {
+		"prepare": "mversion patch -mn 'Patch new version and publish'",
+		"postpublish": "git push && git push --tags"
 	},
 	"author": {
 		"name": "DUONG Dinh Cuong",
