@@ -18,6 +18,7 @@ module.exports = function(RED) {
 	"use strict";
 	var util = require("util");
 	var vm = require("vm");
+	var AWS = require("aws-sdk");
 
 	function AWSConfigSetup(n) {
 		RED.nodes.createNode(this, n);
@@ -41,17 +42,6 @@ module.exports = function(RED) {
 			node.usecount -= 1;
 			if (node.usecount == 0) {
 			}
-		};
-		this.init = function() {
-			if (!node.iamrole) {
-				AWS.config.update({
-					accessKeyId : node.accesskey,
-					secretAccessKey : node.secretkey
-				});
-			}
-			AWS.config.update({
-				region : node.region
-			});
 		};
 
 		this.on('close', function(closecomplete) {
@@ -105,12 +95,36 @@ module.exports = function(RED) {
 		this.topic = n.topic;
 		this.timeout = n.timeout;
 		this.AWSConfig = RED.nodes.getNode(this.config);
-		var functionText = "var results = null;" + "results = (function(msg){ " + "var __msgid__ = msg._msgid;" + "var node = {" + "log:__node__.log," + "error:__node__.error," + "warn:__node__.warn," + "on:__node__.on," + "status:__node__.status," + "send:function(msgs){ __node__.send(__msgid__,msgs);}" + "};\n" + this.func + "\n" + "})(msg);";
+		var functionText = "var results = null;" +
+				"results = (function(msg){ " +
+					"var __msgid__ = msg._msgid;" +
+					"var node = {" +
+						"log:__node__.log," +
+						"error:__node__.error," +
+						"warn:__node__.warn," +
+						"on:__node__.on," +
+						"status:__node__.status," +
+						"send:function(msgs){ __node__.send(__msgid__,msgs);}" +
+					"};\n" +
+					"if (AWSConfig) {" +
+						"if (!AWSConfig.iamrole) {" +
+							"AWS.config.update({" +
+								"accessKeyId: AWSConfig.accesskey," +
+								"secretAccessKey: AWSConfig.secretkey," +
+							"});" +
+						"}" +
+						"AWS.config.update({" +
+							"region: AWSConfig.region," +
+						"});\n" +
+					"}" +
+					this.func + "\n" +
+				"})(msg);";
 		var sandbox = {
 			callback : function(results) {
 				sendResults(node, node.name, results);
 			},
-			AWS : require('aws-sdk'),
+			AWS : AWS,
+			AWSConfig: node.AWSConfig,
 			console : console,
 			util : util,
 			Buffer : Buffer,
@@ -140,9 +154,6 @@ module.exports = function(RED) {
 			setTimeout : setTimeout,
 			clearTimeout : clearTimeout
 		};
-		if (node.AWSConfig) {
-			node.AWSConfig.init();
-		}
 		var context = vm.createContext(sandbox);
 		try {
 			this.script = vm.createScript(functionText);
