@@ -15,9 +15,10 @@
  **/
 
 module.exports = function(RED) {
-	"use strict";
+	"use strict";	
 	var util = require("util");
 	var vm = require("vm");
+	var AWS = require('aws-sdk');
 
 	function AWSConfigSetup(n) {
 		RED.nodes.createNode(this, n);
@@ -110,7 +111,7 @@ module.exports = function(RED) {
 			callback : function(results) {
 				sendResults(node, node.name, results);
 			},
-			AWS : require('aws-sdk'),
+			AWS : AWS,
 			console : console,
 			util : util,
 			Buffer : Buffer,
@@ -149,7 +150,7 @@ module.exports = function(RED) {
 			this.on("input", function(msg) {
 				try {
 					var start = process.hrtime();
-					context.msg = msg;
+					context.msg = msg;					
 					node.script.runInContext(context);
 					sendResults(node, node.name, context.results);
 
