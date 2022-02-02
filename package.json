@@ -21,8 +21,6 @@
 		"url": "https://github.com/cuongquay/node-red-contrib-aws-sdk"
 	},
 	"scripts": {
-		"prepare": "mversion patch -mn 'Patch new version and publish'",
-		"postpublish": "git push && git push --tags"
 	},
 	"author": {
 		"name": "DUONG Dinh Cuong",
