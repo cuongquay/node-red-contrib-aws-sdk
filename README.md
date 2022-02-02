@@ -2,9 +2,8 @@
 
 A function block where you can write your own code to execute aws-sdk nodejs library.
 
-
 ![NPM Downloads](https://img.shields.io/npm/dw/node-red-contrib-aws-sdk)
-![Package Version](https://img.shields.io/github/package-json/v/node-red-contrib-aws-sdk?color=green)
+![Package Version](https://img.shields.io/github/package-json/v/cuongquay/node-red-contrib-aws-sdk?color=green)
 
 
 **Example of using aws-sdk inside this function block:**
